@@ -1,22 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import PromptCard from './components/PromptCard';
+import { useRouter } from 'next/navigation';
+import PromptCard from '../../components/PromptCard';
 
-export default function Home() {
+export default function SavedPrompts() {
+  const router = useRouter();
   const [prompts, setPrompts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savedPrompts, setSavedPrompts] = useState(new Set());
 
   useEffect(() => {
-    fetchPublicPrompts();
-    fetchSavedPrompts();
+    fetchPrompts();
   }, []);
 
-  const fetchPublicPrompts = async () => {
+  const fetchPrompts = async () => {
     try {
-      const res = await fetch('/api/prompts?view=public');
-      if (!res.ok) throw new Error('Failed to fetch prompts');
+      const res = await fetch('/api/prompts?view=saved');
+      if (!res.ok) {
+        if (res.status === 401) {
+          router.push('/');
+          return;
+        }
+        throw new Error('Failed to fetch prompts');
+      }
       const data = await res.json();
       setPrompts(data);
     } catch (error) {
@@ -26,21 +32,9 @@ export default function Home() {
     }
   };
 
-  const fetchSavedPrompts = async () => {
-    try {
-      const res = await fetch('/api/prompts?view=saved');
-      if (res.ok) {
-        const data = await res.json();
-        setSavedPrompts(new Set(data.map(p => p._id)));
-      }
-    } catch (error) {
-      console.error('Error fetching saved prompts:', error);
-    }
-  };
-
   const handleSave = async (prompt) => {
     try {
-      const res = await fetch('/api/prompts', {
+      await fetch('/api/prompts', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -48,20 +42,12 @@ export default function Home() {
         body: JSON.stringify({
           id: prompt._id,
           action: 'save',
-          isPublic: !savedPrompts.has(prompt._id),
+          isPublic: false,
         }),
       });
-
-      if (res.ok) {
-        if (savedPrompts.has(prompt._id)) {
-          savedPrompts.delete(prompt._id);
-        } else {
-          savedPrompts.add(prompt._id);
-        }
-        setSavedPrompts(new Set(savedPrompts));
-      }
+      fetchPrompts(); // Refresh the list after unsaving
     } catch (error) {
-      console.error('Error saving prompt:', error);
+      console.error('Error unsaving prompt:', error);
     }
   };
 
@@ -75,20 +61,20 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Public Prompts</h1>
+      <h1 className="text-2xl font-bold mb-6">Saved Prompts</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {prompts.length === 0 ? (
           <div className="text-gray-500 col-span-full text-center py-12">
-            No public prompts available.
+            No saved prompts yet.
           </div>
         ) : (
           prompts.map((prompt) => (
             <PromptCard
               key={prompt._id}
               prompt={prompt}
-              showActions={false}
+              showActions={true}
               onSave={handleSave}
-              isSaved={savedPrompts.has(prompt._id)}
+              isSaved={true}
             />
           ))
         )}

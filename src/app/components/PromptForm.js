@@ -8,7 +8,8 @@ export default function PromptForm({ prompt, onSubmit, onCancel }) {
     title: '',
     type: 'user',
     content: '',
-    tags: ''
+    tags: '',
+    isPublic: false
   });
 
   useEffect(() => {
@@ -17,7 +18,8 @@ export default function PromptForm({ prompt, onSubmit, onCancel }) {
         title: prompt.title || '',
         type: prompt.type,
         content: prompt.content,
-        tags: prompt.tags?.join(', ') || ''
+        tags: prompt.tags?.join(', ') || '',
+        isPublic: prompt.isPublic || false
       });
     }
   }, [prompt]);
@@ -93,6 +95,27 @@ export default function PromptForm({ prompt, onSubmit, onCancel }) {
           className="w-full px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-700"
           placeholder="creativity, coding, etc."
         />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <label htmlFor="isPublic" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Make Public
+        </label>
+        <div className="relative inline-block w-10 mr-2 align-middle select-none">
+          <input
+            type="checkbox"
+            id="isPublic"
+            checked={formData.isPublic}
+            onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+            className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+          />
+          <label
+            htmlFor="isPublic"
+            className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${
+              formData.isPublic ? 'bg-blue-500' : 'bg-gray-300'
+            }`}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end space-x-3">

@@ -5,19 +5,37 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   try {
-    const cks = cookies();
-    const userId = cks.get('userId')?.value; 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { searchParams } = new URL(request.url);
+    const view = searchParams.get('view') || 'private';
+    const cks = await cookies();
+    const userId = cks.get('userId')?.value;
 
     const { db } = await connectToDatabase();
-    const prompts = await db.collection('prompts')
-      .find({ userId: new ObjectId(userId) })
-      .sort({ updatedAt: -1 })
-      .toArray();
+    
+    if (view === 'public') {
+      // Public feed - show all public prompts
+      const prompts = await db.collection('prompts')
+        .find({ isPublic: true })
+        .sort({ updatedAt: -1 })
+        .toArray();
+      return NextResponse.json(prompts);
+    } else if (view === 'saved' && userId) {
+      // Saved prompts
+      const prompts = await db.collection('prompts')
+        .find({ savedBy: new ObjectId(userId) })
+        .sort({ updatedAt: -1 })
+        .toArray();
+      return NextResponse.json(prompts);
+    } else if (userId) {
+      // User's own prompts
+      const prompts = await db.collection('prompts')
+        .find({ userId: new ObjectId(userId) })
+        .sort({ updatedAt: -1 })
+        .toArray();
+      return NextResponse.json(prompts);
+    }
 
-    return NextResponse.json(prompts);
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -25,13 +43,13 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const cks = cookies();
+    const cks = await cookies();
     const userId = cks.get('userId')?.value;
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { type, content, title, tags } = await request.json();
+    const { type, content, title, tags, isPublic } = await request.json();
     const { db } = await connectToDatabase();
 
     const now = new Date();
@@ -41,6 +59,8 @@ export async function POST(request) {
       content,
       title,
       tags: tags || [],
+      isPublic: isPublic || false,
+      savedBy: [],
       versions: [{
         content,
         createdAt: now
@@ -58,15 +78,26 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const cks = cookies();
+    const cks = await cookies();
     const userId = cks.get('userId')?.value;
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, type, content, title, tags } = await request.json();
+    const { id, type, content, title, tags, isPublic, action } = await request.json();
     const { db } = await connectToDatabase();
 
+    if (action === 'save') {
+      // Handle saving/unsaving prompts
+      const operation = isPublic ? '$addToSet' : '$pull';
+      await db.collection('prompts').updateOne(
+        { _id: new ObjectId(id) },
+        { [operation]: { savedBy: new ObjectId(userId) } }
+      );
+      return NextResponse.json({ success: true });
+    }
+
+    // Regular prompt update
     const prompt = await db.collection('prompts').findOne({
       _id: new ObjectId(id),
       userId: new ObjectId(userId)
@@ -83,6 +114,7 @@ export async function PUT(request) {
         content,
         title,
         tags: tags || [],
+        isPublic,
         updatedAt: now
       },
       $push: {
@@ -106,7 +138,7 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-    const cks = cookies();
+    const cks = await cookies();
     const userId = cks.get('userId')?.value;
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
