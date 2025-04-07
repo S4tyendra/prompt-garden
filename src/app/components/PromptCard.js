@@ -78,7 +78,7 @@ export default function PromptCard({ prompt, onEdit, onDelete, onSave, showActio
         
         {showActions ? (
           <>
-            <p className="text-sm text-gray-600 mb-4">{prompt.content}</p>
+            <p className="text-sm text-gray-600 mb-4 whitespace-pre-wrap">{prompt.content}</p>
             <div className="flex flex-wrap gap-2 mb-3">
               {prompt.tags?.map((tag) => (
                 <span
@@ -109,7 +109,7 @@ export default function PromptCard({ prompt, onEdit, onDelete, onSave, showActio
             </div>
           </>
         ) : (
-          <p className="text-sm text-gray-600 line-clamp-2">{prompt.content}</p>
+          <p className="text-sm text-gray-600 line-clamp-2 whitespace-pre-wrap">{prompt.content}</p>
         )}
       </motion.div>
 
