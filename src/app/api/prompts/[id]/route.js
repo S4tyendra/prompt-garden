@@ -3,7 +3,8 @@ import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 import { withRateLimit, cache, generateCacheKey, withCache } from '@/lib/api-utils';
 
-export async function GET(request, { params }) {
+export async function GET(request, props) {
+  const params = await props.params;
   try {
     await withRateLimit(request);
 
