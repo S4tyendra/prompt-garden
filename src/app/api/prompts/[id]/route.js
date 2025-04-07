@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 
-export async function GET(request, { params }) {
+export async function GET(request, props) {
+  const params = await props.params;
   try {
     const { db } = await connectToDatabase();
     const prompt = await db.collection('prompts').findOne({
