@@ -9,8 +9,8 @@ export const cache = new LRUCache({
 });
 
 // Custom key generator for rate limiting
-function keyGenerator(request) {
-  const headersList = headers();
+async function keyGenerator(request) {
+  const headersList = await headers();
   const forwardedFor = headersList.get('x-forwarded-for');
   const realIp = headersList.get('x-real-ip');
   const ip = forwardedFor?.split(',')[0] || realIp || 'unknown';
