@@ -1,9 +1,13 @@
 import { connectToDatabase } from '@/lib/mongodb';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/api-utils';
 
 export async function POST(request) {
   try {
+    // Apply rate limiting
+    await withRateLimit(request);
+
     const { action, username, password } = await request.json();
     const { db } = await connectToDatabase();
 
@@ -35,6 +39,9 @@ export async function POST(request) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
+    if (error.message.includes('Too many requests')) {
+      return NextResponse.json({ error: error.message }, { status: 429 });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
