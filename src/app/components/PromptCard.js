@@ -36,8 +36,8 @@ export default function PromptCard({ prompt, onEdit, onDelete, onSave, showActio
         animate={{ opacity: 1, y: 0 }}
         className={`relative p-4 rounded-lg shadow-md mb-4 group ${
           prompt.type === 'system' 
-            ? 'bg-blue-50 dark:bg-blue-900/30' 
-            : 'bg-green-50 dark:bg-green-900/30'
+            ? 'bg-blue-50' 
+            : 'bg-green-50'
         }`}
       >
         <div className="flex justify-between items-start mb-2">
@@ -78,12 +78,12 @@ export default function PromptCard({ prompt, onEdit, onDelete, onSave, showActio
         
         {showActions ? (
           <>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{prompt.content}</p>
+            <p className="text-sm text-gray-600 mb-4">{prompt.content}</p>
             <div className="flex flex-wrap gap-2 mb-3">
               {prompt.tags?.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-1 text-xs rounded-full bg-gray-200 dark:bg-gray-700"
+                  className="px-2 py-1 text-xs rounded-full bg-gray-200"
                 >
                   {tag}
                 </span>
@@ -93,7 +93,7 @@ export default function PromptCard({ prompt, onEdit, onDelete, onSave, showActio
               {onEdit && (
                 <button
                   onClick={() => onEdit(prompt)}
-                  className="px-3 py-1 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="px-3 py-1 text-sm rounded-md hover:bg-gray-100 "
                 >
                   Edit
                 </button>
@@ -101,7 +101,7 @@ export default function PromptCard({ prompt, onEdit, onDelete, onSave, showActio
               {onDelete && (
                 <button
                   onClick={() => onDelete(prompt._id)}
-                  className="px-3 py-1 text-sm text-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="px-3 py-1 text-sm text-red-600 rounded-md hover:bg-red-50 "
                 >
                   Delete
                 </button>
@@ -109,7 +109,7 @@ export default function PromptCard({ prompt, onEdit, onDelete, onSave, showActio
             </div>
           </>
         ) : (
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{prompt.content}</p>
+          <p className="text-sm text-gray-600 line-clamp-2">{prompt.content}</p>
         )}
       </motion.div>
 
