@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 
-const MONGODB_URI = 'mongodb://localhost:27017';
+const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB = 'prompt_garden';
 
 if (!MONGODB_URI) {
