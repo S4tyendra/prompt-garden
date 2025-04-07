@@ -2,11 +2,10 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { cookies } from 'next/headers';
 import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
-import { withRateLimit, cache, generateCacheKey } from '@/lib/api-utils';
+import { withRateLimit, cache, generateCacheKey, withCache } from '@/lib/api-utils';
 
 export async function GET(request) {
   try {
-    // Apply rate limiting
     await withRateLimit(request);
 
     const { searchParams } = new URL(request.url);
@@ -14,11 +13,10 @@ export async function GET(request) {
     const cks = await cookies();
     const userId = cks.get('userId')?.value;
 
-    // Generate cache key based on view and userId
     const cacheKey = generateCacheKey(request, { userId });
     const cachedResponse = cache.get(cacheKey);
     if (cachedResponse) {
-      return NextResponse.json(cachedResponse);
+      return withCache(NextResponse.json(cachedResponse), cacheKey);
     }
 
     const { db } = await connectToDatabase();
@@ -43,9 +41,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Cache the response
     cache.set(cacheKey, prompts);
-    return NextResponse.json(prompts);
+    return withCache(NextResponse.json(prompts), cacheKey);
   } catch (error) {
     if (error.message.includes('Too many requests')) {
       return NextResponse.json({ error: error.message }, { status: 429 });
